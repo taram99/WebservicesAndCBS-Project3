@@ -1,10 +1,9 @@
 from jwtauth import validating_jwt, generating_jwt
 from flask import Blueprint, jsonify, request
+from database import creating_user_db, update_password_db, get_user
 
 #Creates blueprint for authentication routes and allows auth service to be registered in app2.py
 auth_routes = Blueprint("auth_routes", __name__)
-#In memory storage for users
-users = {}
 
 @auth_routes.route("/users", methods=["POST"])
 def create_user():
@@ -15,10 +14,9 @@ def create_user():
     username = data.get("username")
     password = data.get("password")
     #Prevents duplicate users
-    if username in users:
+    correct = creating_user_db(username, password)
+    if not correct:
         return "Duplicate", 409
-    #Stores user credentials in memory
-    users[username] = password
     return "", 201
     
 
@@ -32,10 +30,10 @@ def update_password():
     password_old = data.get("old-password")
     password_new = data.get("new-password")
     #Verify user exists and old password matches
-    if username not in users or users[username] != password_old:
+    user = get_user(username) #function out of db file
+    if not user or user[0] != password_old:
         return "forbidden", 403
-    #Updates password
-    users[username] = password_new
+    update_password_db(username, password_new)
     return "", 200
 
 @auth_routes.route("/users/login", methods=["POST"])
@@ -47,7 +45,8 @@ def login():
     username = data.get("username")
     password = data.get("password")
     #Validate credentials
-    if username not in users or users[username] != password:
+    user = get_user(username)
+    if not user or user[0] != password:
         return "forbidden", 403
     #Generate signed JWT for authenticated user
     token = generating_jwt(username)
