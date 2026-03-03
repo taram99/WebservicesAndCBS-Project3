@@ -1,7 +1,10 @@
 from flask import request, jsonify, redirect
-from utils import *
+from utils import is_valid_url, create_short_id
 import json
 import requests
+from database2 import (
+does_url_exist, delete_url, update_url_in_db, increment_clicks, url_row, ids_user,
+insert_new_url, get_id_by_url, init_db)
 
 def register_routes(app):
     #Registers all URL shortening routes

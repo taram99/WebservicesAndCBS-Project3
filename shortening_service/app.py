@@ -1,5 +1,6 @@
 from flask import Flask
 from routes import register_routes
+from database2 import init_db
 
 def create_app():
     app = Flask(__name__)
@@ -8,5 +9,6 @@ def create_app():
     return app
 #Runs if file is executed directly
 if __name__ == "__main__":
+    init_db()
     app = create_app()
     app.run(port=8000, debug=True) #Debug enables automatic reload
