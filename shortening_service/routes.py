@@ -3,7 +3,7 @@ from utils import is_valid_url, create_short_id
 import json
 import requests
 from database2 import (
-does_url_exist, delete_url, update_url_in_db, increment_clicks, url_row, ids_user,
+does_url_exist, delete_url_db, update_url_in_db, increment_clicks, url_row, ids_user,
 insert_new_url, get_id_by_url, init_db)
 
 def register_routes(app):
@@ -26,7 +26,7 @@ def register_routes(app):
         try:
             #Calls authentication service to validate token
             response = requests.post(
-                "http://127.0.0.1:8001/validate",
+                "http://auth_service:8001/validate",
                 json={"token": token}
             )
 
@@ -72,7 +72,7 @@ def register_routes(app):
             return bad_request()
         
         #Check if url already exists, 201 return to satisfy unit tests
-        id_exist = does_url_exist(url)
+        id_exist = get_id_by_url(url)
         if id_exist:
             return jsonify({"warning": "url already exists",
                                "id": id_exist}), 201
@@ -113,7 +113,7 @@ def register_routes(app):
         """
         Returns long url associated with short url. Increments click counter.
         """
-        row = get_id_by_url(id)
+        row = url_row(id)
         if not row:
             return "", 404
         increment_clicks(id)
@@ -130,7 +130,7 @@ def register_routes(app):
         if not username:
             return "", 403
         
-        row = get_id_by_url(id)
+        row = url_row(id)
         if not row:
             return "", 404
 
@@ -174,12 +174,12 @@ def register_routes(app):
         if not username:
             return "", 403
         
-        row = get_id_by_url(id)
+        row = url_row(id)
         if not row:
             return "", 404
 
         owner = row[2]
-        if "owner" != username:
+        if owner != username:
             return "", 403
 
         delete_url(id)
@@ -190,7 +190,7 @@ def register_routes(app):
         """
         Returns statistics for short ID (click count).
         """
-        row = get_id_by_url(id)
+        row = url_row(id)
         if not row:
             return "", 404
         

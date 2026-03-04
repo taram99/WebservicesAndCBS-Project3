@@ -1,7 +1,8 @@
 import sqlite3
 import os
 
-DB_PATH = os.environ.get("DB_PATH", "shortening_service.db")
+#DB_PATH = os.environ.get("DB_PATH", "shortening_service.db")
+DB_PATH = "/data/shortening_service.db"
 
 def connect_db():
     return sqlite3.connect(DB_PATH)
@@ -28,7 +29,7 @@ def get_id_by_url(url): #check if url exists
     conn.close()
     return row[0] if row else None
 
-def inser_new_url(short_id, url, owner):
+def insert_new_url(short_id, url, owner):
     conn = connect_db()
     cursor = conn.cursor()
     cursor.execute(
@@ -54,7 +55,7 @@ def url_row(short_id):
     conn.close()
     return row 
 
-def increment_clicks(short_ids):
+def increment_clicks(short_id):
     conn = connect_db()
     cursor = conn.cursor()
     cursor.execute("UPDATE urls SET clicks = clicks + 1 WHERE id = ?", (short_id,))
@@ -71,7 +72,7 @@ def update_url_in_db(short_id, new_url):
     conn.commit()
     conn.close()
 
-def delete_url(short_id):
+def delete_url_db(short_id):
     conn = connect_db()
     cursor = conn.cursor()
     cursor.execute("DELETE FROM urls WHERE id = ?", (short_id,))

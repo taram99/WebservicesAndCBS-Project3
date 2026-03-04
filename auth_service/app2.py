@@ -13,4 +13,4 @@ def home():
 #Runs if this file is executed directly
 if __name__ == "__main__":
     init_db() #ensures table is created when service starts
-    app.run(port=8001, debug=True) #Debug enables automatic reload
+    app.run(host="0.0.0.0", port=8001) #Debug enables automatic reload

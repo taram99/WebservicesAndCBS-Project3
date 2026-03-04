@@ -11,4 +11,4 @@ def create_app():
 if __name__ == "__main__":
     init_db()
     app = create_app()
-    app.run(port=8000, debug=True) #Debug enables automatic reload
+    app.run(host="0.0.0.0", port=8000) #Debug enables automatic reload

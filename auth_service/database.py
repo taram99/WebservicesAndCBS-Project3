@@ -1,7 +1,7 @@
 import sqlite3
 import os
 
-DB_PATH = os.environ.get("DB_PATH", "auth.db")
+DB_PATH = "/data/auth.db"
 
 def connect_db():
     return sqlite3.connect(DB_PATH)
