@@ -72,17 +72,13 @@ def register_routes(app):
             return bad_request()
         
         #Check if url already exists, 201 return to satisfy unit tests
-        for id, v in store.items():
-            if v["url"] == url:
-                return jsonify({"warning": "url already exists",
-                               "id": id}), 201
+        id_exist = does_url_exist(url)
+        if id_exist:
+            return jsonify({"warning": "url already exists",
+                               "id": id_exist}), 201
             
         short_id = create_short_id()
-        store[short_id] = {
-            "url": url,
-            "clicks": 0,
-            "owner": username #Store owner
-        }
+        insert_new_url(short_id, url, username)
         return jsonify({"id": short_id}), 201
 
     @app.route("/", methods=["GET"])
@@ -95,10 +91,7 @@ def register_routes(app):
             return "", 403
         
         #Users now only see their own urls
-        user_keys = [
-            id for id, v in store.items()
-            if v["owner"] == username
-        ]
+        user_keys = ids_user(username)
         
         return jsonify({
             "values": user_keys if user_keys else None
@@ -120,10 +113,12 @@ def register_routes(app):
         """
         Returns long url associated with short url. Increments click counter.
         """
-        if id not in store:
+        row = get_id_by_url(id)
+        if not row:
             return "", 404
-        store[id]["clicks"] += 1
-        return jsonify({"value": store[id]["url"]}), 301
+        increment_clicks(id)
+
+        return jsonify({"value": row[0]}), 301
 
     @app.route("/<string:id>", methods=["PUT"])
     def update_url(id):
@@ -135,10 +130,12 @@ def register_routes(app):
         if not username:
             return "", 403
         
-        if id not in store:
+        row = get_id_by_url(id)
+        if not row:
             return "", 404
 
-        if store[id]["owner"] != username:
+        owner = row[2]
+        if owner != username:
             return "", 403
 
 
@@ -161,12 +158,9 @@ def register_routes(app):
             return bad_request()
         
         #Check if url already exists and is not the same as the current url
-        for existing_id, v in store.items():
-            if v["url"] == url and existing_id != id:
-                return bad_request("url already exists")
-
-        store[id]["url"] = url
-        store[id]["clicks"] = 0
+        if does_url_exist(url,id):
+            return bad_request("url exists already")
+        update_url_in_db(id, url)
 
         return "", 200
 
@@ -180,13 +174,15 @@ def register_routes(app):
         if not username:
             return "", 403
         
-        if id not in store:
+        row = get_id_by_url(id)
+        if not row:
             return "", 404
 
-        if store[id]["owner"] != username:
+        owner = row[2]
+        if "owner" != username:
             return "", 403
 
-        del store[id]
+        delete_url(id)
         return "", 204
     
     @app.route("/<string:id>/stats", methods=["GET"])
@@ -194,9 +190,12 @@ def register_routes(app):
         """
         Returns statistics for short ID (click count).
         """
-        if id not in store:
+        row = get_id_by_url(id)
+        if not row:
             return "", 404
+        
+        url, clicks, owner = row
         return jsonify({"id": id, 
-                        "url": store[id]["url"],
-                        "clicks": store[id]["clicks"]}), 200
+                        "url": url,
+                        "clicks": clicks}), 200
     
