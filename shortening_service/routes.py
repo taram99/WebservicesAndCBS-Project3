@@ -27,7 +27,7 @@ def register_routes(app):
         try:
             #Calls authentication service to validate token
             response = requests.post(
-                "http://auth_service:8001/validate",
+                "http://auth-service:8001/validate",
                 json={"token": token}
             )
 
