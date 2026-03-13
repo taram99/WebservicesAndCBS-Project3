@@ -9,6 +9,5 @@ def create_app():
     return app
 #Runs if file is executed directly
 if __name__ == "__main__":
-    init_db()
     app = create_app()
     app.run(host="0.0.0.0", port=8000) #Debug enables automatic reload

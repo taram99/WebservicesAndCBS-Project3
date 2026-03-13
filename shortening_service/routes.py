@@ -7,6 +7,7 @@ does_url_exist, delete_url_db, update_url_in_db, increment_clicks, url_row, ids_
 insert_new_url, get_id_by_url, init_db)
 
 def register_routes(app):
+    init_db()
     #Registers all URL shortening routes
     #Service depends on authentication service for user validation.
 
@@ -182,7 +183,7 @@ def register_routes(app):
         if owner != username:
             return "", 403
 
-        delete_url(id)
+        delete_url_db(id)
         return "", 204
     
     @app.route("/<string:id>/stats", methods=["GET"])
