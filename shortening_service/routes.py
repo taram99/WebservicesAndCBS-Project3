@@ -4,8 +4,9 @@ import json
 import requests
 from database2 import (
 does_url_exist, delete_url_db, update_url_in_db, increment_clicks, url_row, ids_user,
-insert_new_url, get_id_by_url, init_db)
+insert_new_url, get_id_by_url, init_db, short_id_exists, existing_url_row)
 import os
+from psycopg2 import IntegrityError
 AUTH_SERVICE_URL = os.environ.get("AUTH_SERVICE_URL", "http://auth_service:8001")
 
 def register_routes(app):
@@ -81,7 +82,11 @@ def register_routes(app):
             return jsonify({"warning": "url already exists",
                                "id": id_exist}), 201
             
-        short_id = create_short_id()
+        while True:
+            short_id = create_short_id()
+            if not short_id_exists(short_id):
+                break
+            
         insert_new_url(short_id, url, username)
         return jsonify({"id": short_id}), 201
 

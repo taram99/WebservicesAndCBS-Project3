@@ -105,3 +105,21 @@ def does_url_exist(url,current_id):
     cursor.close()
     conn.close()
     return row is not None
+
+def short_id_exists(short_id):
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT 1 FROM urls WHERE id = %s", (short_id,))
+    row = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    return row is not None
+
+def existing_url_row(url):
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, owner FROM urls WHERE url = %s", (url,))
+    row = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    return row
