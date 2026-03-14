@@ -1,10 +1,22 @@
-import sqlite3
 import os
+import psycopg2
+from psycopg2 import IntegrityError
 
-DB_PATH = "/data/auth.db"
+#postgres connection
+DB_HOST = os.environ.get("DB_HOST", "postgres")
+DB_PORT = int(os.environ.get("DB_PORT", 5432))
+DB_NAME = os.environ.get("DB_NAME", "webservices")
+DB_USER = os.environ.get("DB_USER", "user")
+DB_PASSWORD = os.environ.get("DB_PASSWORD", "password")
 
 def connect_db():
-    return sqlite3.connect(DB_PATH)
+        return psycopg2.connect(
+        host=DB_HOST,
+        port=DB_PORT,
+        dbname=DB_NAME,
+        user=DB_USER,
+        password=DB_PASSWORD,
+    )
 
 def init_db():
     conn = connect_db()
@@ -16,6 +28,7 @@ def init_db():
             """)
 
     conn.commit() #apply change to database
+    cursor.close() #close cursor when no longer in use
     conn.close() #close database connection when no longer in use
 
 
@@ -23,24 +36,27 @@ def creating_user_db(username, password): #inserting data
     conn = connect_db()
     cursor = conn.cursor()
     try:
-        cursor.execute("INSERT INTO users (username, password)  VALUES (?, ?)",
+        cursor.execute("INSERT INTO users (username, password)  VALUES (%s, %s)",
                        (username, password)
                        )
         conn.commit()
         return True
-    except sqlite3.IntegrityError:
+    except IntegrityError:
+        conn.rollback() #rollback transaction if error occurs
         return False
     finally:
+        cursor.close()
         conn.close()
 
 def get_user(username):
     conn = connect_db()
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT password FROM users WHERE username = ?",
+        "SELECT password FROM users WHERE username = %s",
         (username,)
     )
     result = cursor.fetchone() #if query returns one row
+    cursor.close()
     conn.close()
     return result
 
@@ -48,8 +64,9 @@ def update_password_db(username, new_password):
     conn = connect_db()
     cursor = conn.cursor()
     cursor.execute(
-        "UPDATE users SET password = ? WHERE username = ?",
+        "UPDATE users SET password = %s WHERE username = %s",
         (new_password, username)
     )
     conn.commit()
+    cursor.close()
     conn.close()

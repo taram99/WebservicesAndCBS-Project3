@@ -1,24 +1,56 @@
 services:
+
+  postgres:
+    image: postgres:16
+    container_name: postgres_db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: webservices
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+        - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d webservices"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      
+
   auth_service:
     build: ./auth_service
     container_name: auth_service
-    expose: #exposes the port to other services in the Docker network instead of Ports which maps to the host machine
+    expose:
       - "8001"
-    volumes:
-      - auth_data:/data
     environment:
-      - JWT_SECRET= supersecretkey
-      - DB_PATH=/data/auth.db
+      JWT_SECRET: supersecretkey
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: webservices
+      DB_USER: user
+      DB_PASSWORD: password
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   shortening_service:
     build: ./shortening_service
     container_name: shortening_service
-    expose: #exposes the port to other services in the Docker network instead of Ports which maps to the host machine
+    expose:
       - "8000"
-    volumes:
-      - shortener_data:/data
+    environment:
+      AUTH_SERVICE_URL: http://auth_service:8001
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: webservices
+      DB_USER: user
+      DB_PASSWORD: password
     depends_on:
-      - auth_service
+      postgres:
+        condition: service_healthy
+      auth_service:
+        condition: service_started
     
   nginx:
     image: nginx:latest
@@ -34,5 +66,4 @@ services:
 
 
 volumes:
-  auth_data:
-  shortener_data:
+  postgres_data:

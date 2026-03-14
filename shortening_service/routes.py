@@ -5,6 +5,8 @@ import requests
 from database2 import (
 does_url_exist, delete_url_db, update_url_in_db, increment_clicks, url_row, ids_user,
 insert_new_url, get_id_by_url, init_db)
+import os
+AUTH_SERVICE_URL = os.environ.get("AUTH_SERVICE_URL", "http://auth_service:8001")
 
 def register_routes(app):
     init_db()
@@ -27,8 +29,9 @@ def register_routes(app):
         try:
             #Calls authentication service to validate token
             response = requests.post(
-                "http://auth-service:8001/validate",
-                json={"token": token}
+                f"{AUTH_SERVICE_URL}/validate",
+                json={"token": token},
+                timeout=5
             )
 
             print("Validate status:", response.status_code)
