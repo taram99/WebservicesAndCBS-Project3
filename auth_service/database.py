@@ -10,6 +10,12 @@ DB_USER = os.environ.get("DB_USER", "user")
 DB_PASSWORD = os.environ.get("DB_PASSWORD", "password")
 
 def connect_db():
+        """
+        Establish and return a connection to the PostgreSQL database.
+
+        Uses connection parameters stored in environment variables
+        (host, port, database name, username, password).
+        """
         return psycopg2.connect(
         host=DB_HOST,
         port=DB_PORT,
@@ -19,6 +25,11 @@ def connect_db():
     )
 
 def init_db():
+    """
+    Initializes the database.
+    This function creates a users table if it does not already exists.
+    It stores username and password.
+    """
     conn = connect_db()
     cursor = conn.cursor() #create cursor object
     cursor.execute(""" CREATE TABLE IF NOT EXISTS users (
@@ -33,6 +44,12 @@ def init_db():
 
 
 def creating_user_db(username, password): #inserting data
+    """
+    Insert a new user into the database.
+    param: username:str,
+    param: password:str
+    returns: bool. True if user is successfully created and False if the user already exist.
+    """
     conn = connect_db()
     cursor = conn.cursor()
     try:
@@ -49,6 +66,12 @@ def creating_user_db(username, password): #inserting data
         conn.close()
 
 def get_user(username):
+    """
+    Retrieve a user's password from the database.
+    param: username:str
+    return: tuple or None. Returns a tuple containing the password is the user exists and otherwise
+    it returns None.
+    """
     conn = connect_db()
     cursor = conn.cursor()
     cursor.execute(
@@ -61,6 +84,11 @@ def get_user(username):
     return result
 
 def update_password_db(username, new_password):
+    """
+    Update the password of an existing user.
+    param: username:str
+    param: new_password:str, which will replace the old password.
+    """
     conn = connect_db()
     cursor = conn.cursor()
     cursor.execute(
